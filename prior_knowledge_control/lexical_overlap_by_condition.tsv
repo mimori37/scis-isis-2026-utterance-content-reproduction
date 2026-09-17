@@ -1,0 +1,13 @@
+target_id	overlap_june	overlap_names_kept_answer_removed	overlap_words_masked	overlap_symbols_masked	answer_in_same_input
+u009	0.000	0.000	0.000	0.000	no
+u010	0.063	0.000	0.000	0.000	yes
+u011	0.000	0.000	0.000	0.000	no
+u016	0.000	0.000	0.000	0.000	no
+u017	0.000	0.000	0.000	0.000	no
+u019	0.111	0.074	0.111	0.074	no
+u027	0.059	0.059	0.059	0.059	no
+u030	0.000	0.036	0.000	0.036	no
+u047	0.833	0.111	0.000	0.000	yes
+u048	0.045	0.045	0.000	0.049	yes
+u049	0.026	0.026	0.026	0.000	yes
+u050	0.000	0.000	0.000	0.021	no

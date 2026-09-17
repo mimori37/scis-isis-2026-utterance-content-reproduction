@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+message: If you use these materials, please cite the paper.
+title: Supplementary materials for "Evaluating and Diagnosing Character Utterance-Content Reproduction Using Source Utterances as References"
+authors:
+  - family-names: Fukuzako
+    given-names: Taichi
+  - family-names: Sawasaki
+    given-names: Natsuki
+  - family-names: Endo
+    given-names: Satoshi
+preferred-citation:
+  type: conference-paper
+  title: Evaluating and Diagnosing Character Utterance-Content Reproduction Using Source Utterances as References
+  authors:
+    - family-names: Fukuzako
+      given-names: Taichi
+    - family-names: Sawasaki
+      given-names: Natsuki
+    - family-names: Endo
+      given-names: Satoshi
+  collection-title: Proc. of the Joint International Conference on Soft Computing and Intelligent Systems and International Symposium on Advanced Intelligent Systems (SCIS&ISIS)
+  year: 2026

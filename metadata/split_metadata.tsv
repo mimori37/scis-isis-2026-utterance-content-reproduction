@@ -1,0 +1,51 @@
+target_id	source_scene_id	split	turn_in_scene	n_judgment_items	in_main_aggregate	n_context_turns
+u001	1	train	1	0		1
+u002	2	train	1	0		1
+u003	2	train	2	0		3
+u004	3	train	1	0		1
+u005	3	train	2	0		3
+u006	9	train	1	0		3
+u007	9	train	2	0		5
+u008	11	train	1	0		2
+u009	12	test	2	1	yes	8
+u010	13	test	1	2	yes	2
+u011	13	test	2	1	yes	4
+u012	15	train	2	0		2
+u013	15	train	3	0		6
+u014	16	train	1	0		2
+u015	16	train	2	0		4
+u016	17	test	1	1	yes	3
+u017	19	test	1	1	no	1
+u018	20	train	1	0		1
+u019	23	test	2	2	yes	3
+u020	28	train	2	0		2
+u021	28	train	3	0		4
+u022	28	train	4	0		6
+u023	28	train	5	0		8
+u024	29	train	2	0		2
+u025	29	train	3	0		4
+u026	30	train	1	0		1
+u027	31	test	3	1	yes	4
+u028	32	train	2	0		7
+u029	36	train	1	0		1
+u030	38	test	1	2	yes	1
+u031	39	train	1	0		1
+u032	39	train	2	0		3
+u033	39	train	3	0		5
+u034	40	train	1	0		1
+u035	41	train	2	0		2
+u036	41	train	3	0		5
+u037	41	train	4	0		7
+u038	43	train	1	0		1
+u039	43	train	2	0		3
+u040	43	train	3	0		5
+u041	43	train	4	0		7
+u042	43	train	5	0		9
+u043	44	train	2	0		2
+u044	44	train	3	0		4
+u045	44	train	4	0		6
+u046	44	train	5	0		8
+u047	48	test	1	1	yes	1
+u048	48	test	2	4	yes	3
+u049	48	test	3	2	yes	5
+u050	48	test	4	3	yes	7

@@ -1,0 +1,13 @@
+target_id	source_scene_id	its_source_utterance_appears_in_context_of
+u009	12	
+u010	13	u011
+u011	13	
+u016	17	
+u017	19	
+u019	23	
+u027	31	
+u030	38	
+u047	48	u048,u049,u050
+u048	48	u049,u050
+u049	48	u050
+u050	48	

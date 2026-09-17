@@ -1,0 +1,180 @@
+# ============================================================
+# キャラ生成・フィードバック実験フローのオーケストレーション
+#
+# 構成: experiments/<expN>/<TS(タイムスタンプ)>/<各ファイル>
+#   タイムスタンプ = 1 回の実験バッチを exp 跨ぎで束ねる識別子（exp1,exp2,… が同一 TS を共有）。
+#
+# 主な変数（すべて省略可）:
+#   PROVIDER  使用プロバイダ。openai(本番) / gemini(無料・動作確認)。省略時は config.yaml の既定
+#   TS        対象タイムスタンプ。省略時は最新（init EXP=exp1 のときは新規作成）
+#   EXP       対象実験番号(exp1, exp2, ...)。省略時は TS 内の最新（init では必須）
+#
+# 1フェーズの流れ（人手評価が中間に挟まるため generate と feedback を分離）:
+#   make init     EXP=exp1                  # 新規バッチ作成＋分析/設計プロンプト生成（新TS）
+#   make generate                           # 分析→設計→会話（最新TS/最新expを自動選択）
+#   --- experiments/exp1/<TS>/05_eval_sheet.csv の feedback 列を人手記入（◯/△/×＋コメント） ---
+#   make feedback                           # 課題推定→修正版プロンプト(07/08)＋ログ(06)
+#   make init     EXP=exp2                  # 同一バッチ(最新TS)で exp1 の修正版を exp2 へ引継ぎ
+#   ... 以降 exp2, exp3 と反復 ...
+#
+# 例: テストはGeminiで、特定バッチを指定して回す
+#   make generate PROVIDER=gemini TS=20260616-031000 EXP=exp1
+#   make judge OLD=exp1 NEW=exp2            # 別軸: フロー精度の自動評価（要 rubric 確定）
+# ============================================================
+
+# .venv があれば優先的に使う
+PYTHON ?= $(shell [ -x .venv/bin/python ] && echo .venv/bin/python || echo python3)
+export PYTHONPATH := src
+
+PROVIDER ?=
+TS ?=
+EXP ?=
+OLD ?=
+NEW ?=
+
+# 指定された変数のみフラグ化して各スクリプトへ渡す
+_PROV := $(if $(strip $(PROVIDER)),--provider $(PROVIDER),)
+_TS   := $(if $(strip $(TS)),--ts $(TS),)
+_EXP  := $(if $(strip $(EXP)),--exp $(EXP),)
+COMMON := $(_PROV) $(_TS) $(_EXP)
+
+.PHONY: help setup init generate analysis design dialogue feedback judge clean-runlog
+
+help:
+	@echo "使い方: make <target> [PROVIDER=openai|gemini] [TS=<timestamp>] [EXP=expN]"
+	@echo "targets: setup / init / generate / analysis / design / dialogue / feedback / judge"
+	@echo "詳細は Makefile 冒頭のコメント参照。"
+
+setup:
+	$(PYTHON) -m pip install -r requirements.txt
+
+# 分析/設計プロンプトの用意。exp1 は新規バッチ作成＋メタ生成、exp2 以降は前フェーズ引継ぎ。
+init:
+	@if [ -z "$(strip $(EXP))" ] || [ "$(EXP)" = "exp1" ]; then \
+		$(PYTHON) src/gen_prompts.py $(COMMON); \
+	else \
+		$(PYTHON) src/prepare_phase.py $(COMMON); \
+	fi
+
+# 生成 3 工程をまとめて実行
+generate: analysis design dialogue
+
+analysis:
+	$(PYTHON) src/run_analysis.py $(COMMON)
+
+design:
+	$(PYTHON) src/run_design.py $(COMMON)
+
+dialogue:
+	$(PYTHON) src/run_dialogue.py $(COMMON)
+
+# 人手記入済みの 05_eval_sheet.csv を前提にフィードバック工程を実行
+feedback:
+	$(PYTHON) src/run_feedback.py $(COMMON)
+
+# 別軸: 会話全体ペアワイズ自動評価（LLM-as-a-Judge）
+# 例: make judge PROVIDER=gemini MODE=roundrobin
+#     変数: MODE(roundrobin/adjacent/vs-first/vs-last) GROUNDING(dialogue_scenes/asuka/full) EXPS(exp1,exp2,..)
+MODE ?=
+GROUNDING ?=
+EXPS ?=
+judge:
+	$(PYTHON) src/run_judge.py $(_PROV) $(_TS) \
+		$(if $(strip $(MODE)),--mode $(MODE),) \
+		$(if $(strip $(GROUNDING)),--grounding $(GROUNDING),) \
+		$(if $(strip $(EXPS)),--exps $(EXPS),)
+
+clean-runlog:
+	rm -f experiments/*/*/_runlog/*.jsonl
+
+# ============================================================
+# study02: 原作セリフ再現実験（API不使用・Web版ChatGPT手動コピペ運用）
+#   発話セット(文脈→正解)を train/test 分割し、N=0(キャラ名のみ)から
+#   分析→設計→生成→差分FB を反復。test は世代間 pairwise judge で汎化を測る。
+#   詳細は experiments/study02_script-replay/README.md
+#
+#   make replay-build-sets                # 原作から発話セットを再構築
+#   make replay-init                      # 新バッチ作成（gen0 に種プロンプト配置）
+#   make replay-next                      # 今ChatGPTに貼る全文を _paste.txt へ
+#   make replay-record                    # _reply.txt を取り込み次工程へ
+#   make replay-status                    # 現在地
+#   make replay-judge        A=0 B=3      # 世代0 vs 3 の test 生成の pairwise 貼付
+#   make replay-record-judge A=0 B=3      # judge 出力を取り込み
+# ============================================================
+A ?=
+B ?=
+SWAP ?=
+
+.PHONY: replay-build-sets replay-init replay-next replay-record replay-status replay-judge replay-record-judge
+
+replay-build-sets:
+	$(PYTHON) scripts/build_utterance_sets.py
+
+replay-init:
+	$(PYTHON) src/replay_flow.py init
+
+replay-next:
+	$(PYTHON) src/replay_flow.py next
+
+replay-record:
+	$(PYTHON) src/replay_flow.py record
+
+replay-status:
+	$(PYTHON) src/replay_flow.py status
+
+replay-judge:
+	$(PYTHON) src/replay_flow.py judge --A $(A) --B $(B) $(if $(strip $(SWAP)),--swap,)
+
+replay-record-judge:
+	$(PYTHON) src/replay_flow.py record-judge --A $(A) --B $(B) $(if $(strip $(SWAP)),--swap,)
+
+# ============================================================
+# study03: baseline-anchored replay（N=0=前回研究のキャラ付けプロンプト・評価3層）
+#   CHARAGEN_STUDY=study03_baseline-replay に切替。2条件(N=0a/b)は別バッチ（COND でTSにラベル）。
+#   詳細は experiments/study03_baseline-replay/DESIGN.md
+#
+#   # 条件A を gen0 baseline 直置きで開始
+#   make replay3-init CHARA=experiments/study03_baseline-replay/N0_baseline/chara_prompt_A_h7_r10.md COND=condA
+#   make replay3-next  TS=<batch>             # TS 省略時は最新バッチ
+#   make replay3-record TS=<batch>            # analysis→design なしで gen_train から
+#   make replay3-status TS=<batch>
+#   make replay3-judge        A=0 B=4 TS=<batch> [SWAP=1]
+#   make replay3-record-judge A=0 B=4 TS=<batch> [SWAP=1]
+# ============================================================
+CHARA ?=
+COND ?=
+TS ?=
+GEN ?=
+KEYS ?=
+S3 := CHARAGEN_STUDY=study03_baseline-replay
+
+.PHONY: replay3-init replay3-next replay3-record replay3-status replay3-judge replay3-record-judge replay3-rubric replay3-record-rubric
+
+replay3-init:
+	$(S3) $(PYTHON) src/replay_flow.py init $(if $(strip $(CHARA)),--chara $(CHARA),) $(if $(strip $(COND)),--cond $(COND),)
+
+replay3-next:
+	$(S3) $(PYTHON) src/replay_flow.py next $(if $(strip $(TS)),--ts $(TS),)
+
+replay3-record:
+	$(S3) $(PYTHON) src/replay_flow.py record $(if $(strip $(TS)),--ts $(TS),)
+
+replay3-status:
+	$(S3) $(PYTHON) src/replay_flow.py status $(if $(strip $(TS)),--ts $(TS),)
+
+replay3-judge:
+	$(S3) $(PYTHON) src/replay_flow.py judge --A $(A) --B $(B) $(if $(strip $(TS)),--ts $(TS),) $(if $(strip $(SWAP)),--swap,)
+
+replay3-record-judge:
+	$(S3) $(PYTHON) src/replay_flow.py record-judge --A $(A) --B $(B) $(if $(strip $(TS)),--ts $(TS),) $(if $(strip $(SWAP)),--swap,)
+
+# 絶対rubric（モデル毎の単体評価）。まず KEYS=1 で内容要素キーを作り人手確認→各世代を GEN=n で採点。
+#   make replay3-rubric KEYS=1 TS=<batch>            # gold から内容要素キーを列挙
+#   make replay3-record-rubric KEYS=1 TS=<batch>     # → experiments/study03_baseline-replay/eval/ に保存（要人手確認）
+#   make replay3-rubric GEN=0 TS=<batch>             # gen0 の test 生成を採点
+#   make replay3-record-rubric GEN=0 TS=<batch>      # 平均 content再現率/style を表示・保存
+replay3-rubric:
+	$(S3) $(PYTHON) src/replay_flow.py rubric $(if $(strip $(TS)),--ts $(TS),) $(if $(strip $(KEYS)),--keys,) $(if $(strip $(GEN)),--gen $(GEN),)
+
+replay3-record-rubric:
+	$(S3) $(PYTHON) src/replay_flow.py record-rubric $(if $(strip $(TS)),--ts $(TS),) $(if $(strip $(KEYS)),--keys,) $(if $(strip $(GEN)),--gen $(GEN),)
