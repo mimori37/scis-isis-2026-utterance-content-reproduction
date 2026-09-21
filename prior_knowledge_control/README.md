@@ -23,6 +23,10 @@ four batches are the minimum.
 
 ## Files
 
+- `cross_instance_exposure.tsv` -- which targets had their own source utterance in
+  another target's input context, the test targets having been presented in one batch.
+  This is the confirmed exposure, as distinct from the possible prior knowledge that
+  the masking conditions below probe.
 - `lexical_overlap_by_condition.tsv` -- character 3-gram overlap between the generated
   utterance and the source utterance, per target, per condition. The source utterance is
   substituted under masked conditions, so the comparison stays internally consistent.

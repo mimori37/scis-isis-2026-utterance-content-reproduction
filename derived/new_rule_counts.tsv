@@ -1,0 +1,10 @@
+condition	generation	new_rules	refined_rules	format_only_rules	total_rules
+c_inner	0	14	0	0	14
+c_inner	1	1	13	1	15
+c_inner	2	0	13	0	13
+c_inner	3	0	9	0	9
+c_style	0	11	1	0	12
+c_style	1	0	5	0	5
+c_style	2	1	7	0	8
+c_style	3	0	8	0	8
+c_style	4	0	11	0	11

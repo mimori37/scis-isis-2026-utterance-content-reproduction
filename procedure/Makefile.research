@@ -1,132 +1,26 @@
 # ============================================================
-# キャラ生成・フィードバック実験フローのオーケストレーション
+# study03 の実行に使った make ターゲット。研究リポジトリの Makefile からの抜粋である。
+# ターゲットの中身は変えていない。
 #
-# 構成: experiments/<expN>/<TS(タイムスタンプ)>/<各ファイル>
-#   タイムスタンプ = 1 回の実験バッチを exp 跨ぎで束ねる識別子（exp1,exp2,… が同一 TS を共有）。
+# 抜粋した理由。元の Makefile には、この研究より前の API を使う工程（src/run_analysis.py
+# など）と study02 の工程も入っている。どちらも論文が報告した手続きではなく、参照先の
+# スクリプトもこのリポジトリには無い。残すと、実際には通らない経路を読ませることになる。
 #
-# 主な変数（すべて省略可）:
-#   PROVIDER  使用プロバイダ。openai(本番) / gemini(無料・動作確認)。省略時は config.yaml の既定
-#   TS        対象タイムスタンプ。省略時は最新（init EXP=exp1 のときは新規作成）
-#   EXP       対象実験番号(exp1, exp2, ...)。省略時は TS 内の最新（init では必須）
-#
-# 1フェーズの流れ（人手評価が中間に挟まるため generate と feedback を分離）:
-#   make init     EXP=exp1                  # 新規バッチ作成＋分析/設計プロンプト生成（新TS）
-#   make generate                           # 分析→設計→会話（最新TS/最新expを自動選択）
-#   --- experiments/exp1/<TS>/05_eval_sheet.csv の feedback 列を人手記入（◯/△/×＋コメント） ---
-#   make feedback                           # 課題推定→修正版プロンプト(07/08)＋ログ(06)
-#   make init     EXP=exp2                  # 同一バッチ(最新TS)で exp1 の修正版を exp2 へ引継ぎ
-#   ... 以降 exp2, exp3 と反復 ...
-#
-# 例: テストはGeminiで、特定バッチを指定して回す
-#   make generate PROVIDER=gemini TS=20260616-031000 EXP=exp1
-#   make judge OLD=exp1 NEW=exp2            # 別軸: フロー精度の自動評価（要 rubric 確定）
+# study03 は API を使わない。Web 版の一時チャットへ貼り、返答を手で戻す。
+# replay_flow.py が貼る全文を組み立て、返答を解析して次の工程へ進める。
+#   next   … いま貼る全文を _paste.txt へ書き出す
+#   record … _reply.txt を取り込み、その工程の成果物を保存して次へ進める
+# 発話セットのデータが要るので、このリポジトリだけでは動かない。手続きの記録である。
 # ============================================================
 
 # .venv があれば優先的に使う
 PYTHON ?= $(shell [ -x .venv/bin/python ] && echo .venv/bin/python || echo python3)
 export PYTHONPATH := src
 
-PROVIDER ?=
-TS ?=
-EXP ?=
-OLD ?=
-NEW ?=
-
-# 指定された変数のみフラグ化して各スクリプトへ渡す
-_PROV := $(if $(strip $(PROVIDER)),--provider $(PROVIDER),)
-_TS   := $(if $(strip $(TS)),--ts $(TS),)
-_EXP  := $(if $(strip $(EXP)),--exp $(EXP),)
-COMMON := $(_PROV) $(_TS) $(_EXP)
-
-.PHONY: help setup init generate analysis design dialogue feedback judge clean-runlog
-
-help:
-	@echo "使い方: make <target> [PROVIDER=openai|gemini] [TS=<timestamp>] [EXP=expN]"
-	@echo "targets: setup / init / generate / analysis / design / dialogue / feedback / judge"
-	@echo "詳細は Makefile 冒頭のコメント参照。"
-
-setup:
-	$(PYTHON) -m pip install -r requirements.txt
-
-# 分析/設計プロンプトの用意。exp1 は新規バッチ作成＋メタ生成、exp2 以降は前フェーズ引継ぎ。
-init:
-	@if [ -z "$(strip $(EXP))" ] || [ "$(EXP)" = "exp1" ]; then \
-		$(PYTHON) src/gen_prompts.py $(COMMON); \
-	else \
-		$(PYTHON) src/prepare_phase.py $(COMMON); \
-	fi
-
-# 生成 3 工程をまとめて実行
-generate: analysis design dialogue
-
-analysis:
-	$(PYTHON) src/run_analysis.py $(COMMON)
-
-design:
-	$(PYTHON) src/run_design.py $(COMMON)
-
-dialogue:
-	$(PYTHON) src/run_dialogue.py $(COMMON)
-
-# 人手記入済みの 05_eval_sheet.csv を前提にフィードバック工程を実行
-feedback:
-	$(PYTHON) src/run_feedback.py $(COMMON)
-
-# 別軸: 会話全体ペアワイズ自動評価（LLM-as-a-Judge）
-# 例: make judge PROVIDER=gemini MODE=roundrobin
-#     変数: MODE(roundrobin/adjacent/vs-first/vs-last) GROUNDING(dialogue_scenes/asuka/full) EXPS(exp1,exp2,..)
-MODE ?=
-GROUNDING ?=
-EXPS ?=
-judge:
-	$(PYTHON) src/run_judge.py $(_PROV) $(_TS) \
-		$(if $(strip $(MODE)),--mode $(MODE),) \
-		$(if $(strip $(GROUNDING)),--grounding $(GROUNDING),) \
-		$(if $(strip $(EXPS)),--exps $(EXPS),)
-
-clean-runlog:
-	rm -f experiments/*/*/_runlog/*.jsonl
-
-# ============================================================
-# study02: 原作セリフ再現実験（API不使用・Web版ChatGPT手動コピペ運用）
-#   発話セット(文脈→正解)を train/test 分割し、N=0(キャラ名のみ)から
-#   分析→設計→生成→差分FB を反復。test は世代間 pairwise judge で汎化を測る。
-#   詳細は experiments/study02_script-replay/README.md
-#
-#   make replay-build-sets                # 原作から発話セットを再構築
-#   make replay-init                      # 新バッチ作成（gen0 に種プロンプト配置）
-#   make replay-next                      # 今ChatGPTに貼る全文を _paste.txt へ
-#   make replay-record                    # _reply.txt を取り込み次工程へ
-#   make replay-status                    # 現在地
-#   make replay-judge        A=0 B=3      # 世代0 vs 3 の test 生成の pairwise 貼付
-#   make replay-record-judge A=0 B=3      # judge 出力を取り込み
-# ============================================================
-A ?=
-B ?=
-SWAP ?=
-
-.PHONY: replay-build-sets replay-init replay-next replay-record replay-status replay-judge replay-record-judge
-
+# 発話セットの構築（原作の文字起こしから train/test を作る。study03 もこれを使う）
+.PHONY: replay-build-sets
 replay-build-sets:
 	$(PYTHON) scripts/build_utterance_sets.py
-
-replay-init:
-	$(PYTHON) src/replay_flow.py init
-
-replay-next:
-	$(PYTHON) src/replay_flow.py next
-
-replay-record:
-	$(PYTHON) src/replay_flow.py record
-
-replay-status:
-	$(PYTHON) src/replay_flow.py status
-
-replay-judge:
-	$(PYTHON) src/replay_flow.py judge --A $(A) --B $(B) $(if $(strip $(SWAP)),--swap,)
-
-replay-record-judge:
-	$(PYTHON) src/replay_flow.py record-judge --A $(A) --B $(B) $(if $(strip $(SWAP)),--swap,)
 
 # ============================================================
 # study03: baseline-anchored replay（N=0=前回研究のキャラ付けプロンプト・評価3層）
@@ -141,6 +35,9 @@ replay-record-judge:
 #   make replay3-judge        A=0 B=4 TS=<batch> [SWAP=1]
 #   make replay3-record-judge A=0 B=4 TS=<batch> [SWAP=1]
 # ============================================================
+A ?=
+B ?=
+SWAP ?=
 CHARA ?=
 COND ?=
 TS ?=

@@ -1,0 +1,22 @@
+target_id	item_id	sufficiency_level	deficit_category	c_inner_gen0	c_inner_final	c_style_gen0	c_style_final	in_main_aggregate
+u009	u009-k1	2		×	×	×	○	yes
+u010	u010-k1	2		○	△	×	○	yes
+u010	u010-k2	1	internal_role	×	○	×	×	yes
+u011	u011-k1	2		△	△	△	×	yes
+u016	u016-k1	2		○	△	×	×	yes
+u017	u017-k1	1	relationship_history	△	×	△	△	no
+u019	u019-k1	2		○	○	○	○	yes
+u019	u019-k2	1	situation_event	×	×	△	△	yes
+u027	u027-k1	2		△	△	○	△	yes
+u030	u030-k1	2		○	○	○	○	yes
+u030	u030-k2	1	situation_event	×	△	×	×	yes
+u047	u047-k1	3		○	○	○	○	yes
+u048	u048-k1	2		○	○	△	○	yes
+u048	u048-k2	1	internal_role	×	×	×	×	yes
+u048	u048-k3	1	internal_role	×	×	△	×	yes
+u048	u048-k4	1	internal_role	×	×	×	×	yes
+u049	u049-k1	2		△	×	×	△	yes
+u049	u049-k2	2		△	△	×	△	yes
+u050	u050-k1	2		△	△	△	○	yes
+u050	u050-k2	1	non_verbal	×	×	×	×	yes
+u050	u050-k3	1	non_verbal	×	×	×	×	yes
