@@ -151,8 +151,8 @@ def fig_5(outcomes, pairs):
            if {direction(outcomes[(t, c, 'human')]),
                direction(majority(outcomes, t, c))} == {"gen0", "final"}]
     print("  clear reversals (human vs LLM majority):", rev or "none")
-    print("  NOTE: Fig. 5 draws the LLM-majority exact bar at 9/22; the data give")
-    print("        13/22. See REDISTRIBUTION.md. Every other cell here matches.")
+    print("  NOTE: the camera-ready paper reports 9/22 for the LLM-majority exact")
+    print("        agreement. See derived/README.md.")
 
 
 # --------------------------------------------------- Fig. 6 and Table V
@@ -197,7 +197,7 @@ def fig_6_and_table_v():
               f"{finals.count(0.0) / len(finals):15.3f}")
     rho = spearman([(int(r["sufficiency_level"]), fin[r["item_id"]]) for r in rows])
     print(f"  Spearman rho(sufficiency, final reproduction) = {rho:.3f}  (n={len(rows)})")
-    print("  NOTE: the paper reports rho=0.78 for this quantity; see REDISTRIBUTION.md.")
+    print("  NOTE: the camera-ready paper reports rho=0.78. See derived/README.md.")
 
     head("Table V  reproduction by deficit type among sufficiency-level-1 items")
     print(f"{'deficit type':22s} {'n':>3s} {'final reproduction':>19s}")

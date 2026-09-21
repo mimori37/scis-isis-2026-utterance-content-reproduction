@@ -1,7 +1,9 @@
 """study04（文脈充足度）集計スクリプト。
 
 入力: experiments/study04_context-sufficiency/labeling/02_label.tsv
-      （taichi が STEP2→STEP3 で記入。Claude はラベル内容に関与しない＝集計のみ）
+      （場面文脈充足度のラベルは著者が人手で付与した。このスクリプトは記入済みの
+        ラベルを集計するだけである。充足度のラベルと再現スコアは同一の著者が
+        付与しており、両者の対応は関連であって統制された効果ではない）
 
 出力（stdout ＋ analysis/summary.md）:
   1. 規定度分布（規定度0-3 のキー数。STEP3.5 分布ゲート判定の材料）
@@ -242,7 +244,7 @@ def section_pilot(rows):
         return vals and all(v <= 0.5 for v in vals)
 
     auto = [r for r in rows if r["degree"] in (0, 1) and low_repro(r)]
-    out += ["### 自動サジェスト（基準充足・要 taichi 確認）", ""]
+    out += ["### 自動サジェスト（基準充足・要 著者確認）", ""]
     if not auto:
         out.append("（該当なし or 未記入）")
     else:
@@ -253,7 +255,7 @@ def section_pilot(rows):
             dup = "（不足タイプ重複）" if len(seen_types.get(r["deficit_type"], [])) > 1 else ""
             out.append(f"- {r['key_id']} 規定度{r['degree']} 型[{r['deficit_type'] or '—'}] "
                        f"{r['key_text']} {dup}")
-        out += ["", f"※ {len(auto)}件中から不足タイプを散らして代表5件を taichi が最終選定。"]
+        out += ["", f"※ {len(auto)}件中から不足タイプを散らして代表5件を著者が最終選定。"]
     return out
 
 
@@ -264,7 +266,7 @@ def main():
              "主張レベル: 診断（文脈不足が低到達度の一因の**可能性**まで）。強い統計/因果は出さない。", ""]
     labeled = sum(1 for r in rows if r["degree"] is not None)
     if labeled == 0:
-        lines += ["> ⚠ 02_label.tsv が未記入です。taichi の STEP2→STEP3 記入後に再実行してください。",
+        lines += ["> ⚠ 02_label.tsv が未記入です。著者の STEP2→STEP3 記入後に再実行してください。",
                   "> （スクリプトは記入済みキーのみ集計し、空欄は除外します）", ""]
     d_sec, _ = section_distribution(rows)
     lines += d_sec

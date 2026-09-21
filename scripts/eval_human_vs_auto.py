@@ -1,6 +1,6 @@
 """人手採点(blind)を un-blind し、自動(絶対rubric)との一致を出す。
 
-- eval/human/<label>/answer.tsv（taichi記入）＋ _mapping.tsv（A/B→世代）を読む。
+- eval/human/<label>/answer.tsv（著者記入）＋ _mapping.tsv（A/B→世代）を読む。
 - A/B を世代に戻し、人手の content_rate / style を gen0・最終 ごとに復元。
 - 自動 rubric_gen{0}.tsv / rubric_gen{final}.tsv の同 id と突き合わせ。
 - content_rate（連続）= Spearman 順位相関、style（順序0-2）= 二次重み付きκ を手計算（補助指標）。

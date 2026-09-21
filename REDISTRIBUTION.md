@@ -37,8 +37,9 @@ their wording and their Japanese comments.
 | `prompts/context_sufficiency_rubric.public.md` | calibrated anchor table omitted; the four-level ladder and deficit types are intact |
 | `prompts/gen_instruction.md` | the two source lines in the input example removed; the paste structure is intact |
 | `scripts/build_anonymization_control.py` | one quoted source utterance removed from the docstring |
+| `scripts/build_study04_summary.py` | a docstring line naming individuals rewritten to state the same fact, that the author assigned the labels by hand and the script only aggregates them; three printed strings say "the author" in place of a personal name |
+| `scripts/eval_human_vs_auto.py` | one docstring line says "the author" in place of a personal name |
 | `procedure/replay_flow.py` | three comments narrowed so they do not read as preventing cross-instance exposure; behaviour identical |
-| `procedure/Makefile.research` | reduced to the study03 targets; see the header of that file |
 
 Work and character identifiers are kept in the prompts and in the control scripts,
 because the reported prompts and the anonymization controls cannot be reproduced
@@ -49,27 +50,6 @@ characters or more in the utterance-set data; none contains a source utterance. 
 substitution tables were inspected entry by entry: all 28 and 32 entries are proper
 nouns or short identifiers, the longest being the work title at fourteen characters.
 No absolute local paths, credentials, tokens, or personal data are present.
-
-## Known discrepancies between the paper and these data
-
-Both are reported here rather than silently corrected, because the published figures
-are the record of what was submitted. `reproduce_paper_results.py` prints the value the
-data actually give, and flags each case.
-
-| Where | Paper | These data |
-|---|---|---|
-| Fig. 6, Spearman rank correlation of sufficiency with final reproduction | 0.78 | 0.756 (n=21) |
-| Fig. 5, exact agreement of the LLM majority with the human | 9/22 | 13/22 |
-
-The Fig. 5 value is internally inconsistent in the paper as well: the distribution
-drawn in Fig. 2 for the LLM majority (final 8 / tie 4 / gen0 1 / unstable 9) is
-reproduced exactly by these data, and that distribution implies 13 exact matches, not
-9. The paper's running text quotes the per-judge range 0.41--0.55, which reproduces
-exactly (GPT 9/22, Opus 10/22, Gemini 12/22), so the text is unaffected.
-
-For Fig. 6 we could not recover a definition of the correlation that yields 0.78 from
-the label file. The stratified means the figure plots (1.00 / 0.61 / 0.14) and the
-item counts (1 / 11 / 9) all reproduce exactly.
 
 ## What a third party can and cannot do with this bundle
 

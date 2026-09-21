@@ -54,3 +54,23 @@ Table V.
 Per-target split metadata for all 50 targets: source scene, train or test, position in
 the scene, judgment-item count, and context length. The split is by source scene with
 seed 42, giving train 38 and test 12.
+
+## Known discrepancies with the camera-ready paper
+
+Two reported values do not match a recalculation from these files. Both are recorded
+here as they stand; the data and the aggregation are unchanged.
+`reproduce_paper_results.py` prints the recalculated value and flags each case.
+
+| Reported in | Camera-ready paper | Recalculated from these files |
+|---|---|---|
+| Fig. 5, exact agreement of the LLM majority with the human | 9/22 | 13/22 |
+| Fig. 6, Spearman correlation of sufficiency with final reproduction | 0.78 | 0.756, i.e. 0.76 to two decimals |
+
+The source of each discrepancy could not be resolved from the retained records.
+
+Neighbouring values reproduce exactly. For Fig. 5 these are the direction agreements
+and the per-judge exact agreements the running text quotes as 0.41--0.55 (GPT 9/22,
+Opus 10/22, Gemini 12/22); for Fig. 6, the stratified means the figure plots
+(1.00 / 0.61 / 0.14) and the item counts (1 / 11 / 9). The Fig. 6 recalculation also
+matches `scripts/build_study04_summary.py`, the research-repository script that
+produced the original aggregation.

@@ -31,9 +31,6 @@ as it was run, and the numeric results behind every reported table and figure.
 | Update | train side only; test-side source utterances and evaluation results are never fed back |
 | Language | all generation and evaluation were conducted in Japanese |
 
-Because the web interface exposes no decoding settings and each response was generated
-once, the results are observations of a single sample.
-
 ## Generation and update procedure
 
 Each generation runs three stages -- analysis, design, generation -- and the feedback
@@ -51,13 +48,11 @@ written, in Japanese.
 | Feedback and update, including the stopping-rule status definitions | [`prompts/diff_feedback.md`](prompts/diff_feedback.md) |
 
 [`procedure/replay_flow.py`](procedure/replay_flow.py) is the state machine that
-assembles the text of each paste and parses each reply, and
-[`procedure/Makefile.research`](procedure/Makefile.research) holds the make targets
-that drove it. Both need the utterance-set data, which is withheld, so they record the
-exact procedure rather than run as a pipeline.
-[`procedure/config.py`](procedure/config.py) is the unmodified module those two import.
-Its provider, API-key, and model settings belong to the authors' earlier API-based
-studies and were not used here; `replay_flow.py` uses only its path resolution.
+assembles the text of each paste and parses each reply. It needs the utterance-set
+data, which is withheld, so it records the exact procedure rather than running as a
+pipeline. It imports [`procedure/config.py`](procedure/config.py) for path resolution
+only; that module's provider and API-key settings come from the authors' earlier
+API-based studies and were not used here.
 
 ## Evaluation protocol
 
@@ -98,12 +93,11 @@ This recomputes and prints, from `derived/` alone:
 | Fig. 6 and Table V, scene-context sufficiency | `context_sufficiency.tsv` | [`scripts/build_study04_summary.py`](scripts/build_study04_summary.py) |
 
 The scripts in [`scripts/`](scripts/) are the research-repository originals that
-produced these results from the withheld raw files. They are kept as the record of how
-the aggregation was done; they read research paths and will not run here.
-`reproduce_paper_results.py` is the one entry point that does run.
+produced these results from the withheld raw files. They read research paths and will
+not run here; `reproduce_paper_results.py` is the one entry point that does.
 
-Two reported values do not reproduce, and the script says so where it prints them. See
-[Known discrepancies](REDISTRIBUTION.md#known-discrepancies-between-the-paper-and-these-data).
+Two reported values do not reproduce: see
+[Known discrepancies](derived/README.md#known-discrepancies-with-the-camera-ready-paper).
 
 ## Prior-knowledge and cross-instance controls
 
@@ -116,16 +110,13 @@ the test targets were presented in one batch, so for 4 of the 12 the target's ow
 source utterance appeared in a later target's input context. Removing it lowered the
 highest character 3-gram overlap from 0.833 to 0.111.
 
-Prior knowledge remains possible. Eight masking conditions were run, defined in
-[`prior_knowledge_control/README.md`](prior_knowledge_control/README.md) with their
-aggregate results; the overlap measurements are in
-[`lexical_overlap_by_condition.tsv`](prior_knowledge_control/lexical_overlap_by_condition.tsv)
-and both substitution schemes in full in
-[`substitution_tables.tsv`](prior_knowledge_control/substitution_tables.tsv).
-Replacing proper nouns did not remove every cue identifying the work, and in one
-condition a character name absent from the whole input still appeared in 4 of 10
-generations. [`scripts/build_anonymization_control.py`](scripts/build_anonymization_control.py)
-is the implementation.
+Prior knowledge remains possible. Eight masking conditions were run; replacing proper
+nouns did not remove every cue identifying the work, and in one condition a character
+name absent from the whole input still appeared in 4 of 10 generations.
+[`prior_knowledge_control/README.md`](prior_knowledge_control/README.md) defines the
+conditions and indexes the measurements;
+[`scripts/build_anonymization_control.py`](scripts/build_anonymization_control.py) is
+the implementation.
 
 ## Licensing
 
