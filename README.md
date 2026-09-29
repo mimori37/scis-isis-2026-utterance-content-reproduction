@@ -96,8 +96,8 @@ The scripts in [`scripts/`](scripts/) are the research-repository originals that
 produced these results from the withheld raw files. They read research paths and will
 not run here; `reproduce_paper_results.py` is the one entry point that does.
 
-Two reported values do not reproduce: see
-[Known discrepancies](derived/README.md#known-discrepancies-with-the-camera-ready-paper).
+Two reported values differ from what these files give: see
+[Differences from the camera-ready paper](derived/README.md#differences-from-the-camera-ready-paper).
 
 ## Prior-knowledge and cross-instance controls
 
